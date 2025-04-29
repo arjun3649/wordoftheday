@@ -1,74 +1,73 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import React, { useEffect, useState } from 'react';
 
 export default function HomeScreen() {
+  const [word, setWord] = useState<string | null >(null);
+  const [meaning, setMeaning] = useState<string | null >(null);
+  const [loading, setLoading] = useState<boolean >(false);
+
+  const fetchWord = async () => {
+    setLoading(true);
+    setWord(null);
+    setMeaning(null);
+    
+    try {
+      // First get a random word
+      const res = await fetch('https://random-word-api.herokuapp.com/word');
+      const data = await res.json();
+      const newWord = data[0];
+      setWord(newWord);
+      
+      // Then fetch the definition using the newly fetched word
+      try {
+        const res2 = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${newWord}`);
+        if (!res2.ok) {
+          throw new Error('Definition not found');
+        }
+        const data2 = await res2.json();
+        if (data2 && data2.length > 0 && data2[0].meanings && data2[0].meanings.length > 0) {
+          setMeaning(data2[0].meanings[0].definitions[0].definition);
+        } else {
+          setMeaning('No definition found');
+        }
+      } catch (definitionError) {
+        console.error(definitionError);
+        setMeaning('No definition found');
+      }
+    } catch (error) {
+      console.error(error);
+      setWord('Error fetching word');
+      setMeaning('Error fetching meaning');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWord();
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <div className="flex flex-col justify-center items-center h-full space-y-4 p-6">
+      <h1 className="text-3xl font-bold text-white">Today's Word:</h1>
+      
+      {loading ? (
+        <div className="text-xl text-yellow-300">Loading...</div>
+      ) : (
+        <>
+          <p className="text-2xl font-semibold text-yellow-300">{word}</p>
+          <div className="bg-gray-800 p-4 rounded-lg max-w-md">
+            <p className="text-lg text-white">{meaning}</p>
+          </div>
+        </>
+      )}
+      
+      <button
+        onClick={fetchWord}
+        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors mt-4 font-medium"
+        disabled={loading}
+      >
+        {loading ? 'Loading...' : 'New Word'}
+      </button>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
