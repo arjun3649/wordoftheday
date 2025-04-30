@@ -1,44 +1,87 @@
-import React, { useEffect, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Text,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+
+type WordEntry = {
+  word: string;
+  meaning: string;
+  date: string;
+};
 
 export default function HomeScreen() {
-  const [word, setWord] = useState<string | null >(null);
-  const [meaning, setMeaning] = useState<string | null >(null);
-  const [loading, setLoading] = useState<boolean >(false);
+  const [word, setWord] = useState<string | null>(null);
+  const [meaning, setMeaning] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const fetchWord = async () => {
     setLoading(true);
     setWord(null);
     setMeaning(null);
-    
+
     try {
-      // First get a random word
-      const res = await fetch('https://random-word-api.herokuapp.com/word');
+      const res = await fetch("https://random-word-api.herokuapp.com/word");
       const data = await res.json();
       const newWord = data[0];
       setWord(newWord);
-      
-      // Then fetch the definition using the newly fetched word
+
       try {
-        const res2 = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${newWord}`);
-        if (!res2.ok) {
-          throw new Error('Definition not found');
-        }
+        const res2 = await fetch(
+          `https://api.dictionaryapi.dev/api/v2/entries/en/${newWord}`
+        );
+
+        if (!res2.ok) throw new Error("Definition not found");
+
         const data2 = await res2.json();
-        if (data2 && data2.length > 0 && data2[0].meanings && data2[0].meanings.length > 0) {
-          setMeaning(data2[0].meanings[0].definitions[0].definition);
-        } else {
-          setMeaning('No definition found');
+        let definition = "No definition found";
+
+        if (
+          data2 &&
+          data2.length > 0 &&
+          data2[0].meanings &&
+          data2[0].meanings.length > 0
+        ) {
+          definition = data2[0].meanings[0].definitions[0].definition;
         }
-      } catch (definitionError) {
-        console.error(definitionError);
-        setMeaning('No definition found');
+
+        setMeaning(definition);
+        await saveToHistory(newWord, definition);
+      } catch {
+        const noDefinition = "No definition found";
+        setMeaning(noDefinition);
+        await saveToHistory(newWord, noDefinition);
       }
-    } catch (error) {
-      console.error(error);
-      setWord('Error fetching word');
-      setMeaning('Error fetching meaning');
+    } catch {
+      setWord("Error fetching word");
+      setMeaning("Error fetching meaning");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveToHistory = async (wordToSave: string, meaningToSave: string) => {
+    try {
+      const historyString = await AsyncStorage.getItem("wordHistory");
+      let history: WordEntry[] = historyString ? JSON.parse(historyString) : [];
+      // checks for duplicates
+      const wordExists = history.some((entry) => entry.word === wordToSave);
+      if (wordExists) return;
+
+      const newEntry: WordEntry = {
+        word: wordToSave,
+        meaning: meaningToSave,
+        date: new Date().toISOString(),
+      };
+
+      history.unshift(newEntry);
+      await AsyncStorage.setItem("wordHistory", JSON.stringify(history));
+    } catch (error) {
+      console.error("Error saving to history:", error);
     }
   };
 
@@ -47,27 +90,40 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <div className="flex flex-col justify-center items-center h-full space-y-4 p-6">
-      <h1 className="text-3xl font-bold text-white">Today's Word:</h1>
-      
+    <View className="flex-1 bg-zinc-900 px-6 py-12 justify-center items-center space-y-6">
+      <Text className="text-4xl font-extrabold text-white mb-4">
+        Word of the Day
+      </Text>
+
       {loading ? (
-        <div className="text-xl text-yellow-300">Loading...</div>
+        <ActivityIndicator size="large" color="#facc15" />
       ) : (
         <>
-          <p className="text-2xl font-semibold text-yellow-300">{word}</p>
-          <div className="bg-gray-800 p-4 rounded-lg max-w-md">
-            <p className="text-lg text-white">{meaning}</p>
-          </div>
+          <Text className="text-3xl font-semibold text-yellow-400 text-center m-2">
+            {word}
+          </Text>
+
+          <View className="bg-zinc-800 p-5 rounded-xl shadow-lg w-full max-w-md">
+            <Text className="text-white text-base text-center">{meaning}</Text>
+          </View>
         </>
       )}
-      
-      <button
-        onClick={fetchWord}
-        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors mt-4 font-medium"
-        disabled={loading}
-      >
-        {loading ? 'Loading...' : 'New Word'}
-      </button>
-    </div>
+
+      {loading ? (
+        ""
+      ) : (
+        <TouchableOpacity
+          onPress={fetchWord}
+          disabled={loading}
+          className={`mt-6 px-6 py-3 rounded-full ${
+            loading ? "bg-blue-400" : "bg-blue-600"
+          }`}
+        >
+          <Text className="text-white text-lg font-medium">
+            {loading ? "Loading..." : "New Word"}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
