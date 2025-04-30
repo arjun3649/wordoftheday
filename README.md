@@ -1,50 +1,75 @@
-# Welcome to your Expo app 👋
+# Word of the Day App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile application that displays a random word and its definition each day. The app allows users to explore new vocabulary and keeps a history of previously viewed words.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Random Word Generation**: Fetches a random word from a public API
+- **Word Definitions**: Retrieves and displays word definitions
+- **Word History**: Saves viewed words and their definitions for later reference
+- **Tab Navigation**: Easy navigation between Home and History screens
 
-   ```bash
-   npm install
-   ```
+## API Integrations
 
-2. Start the app
+- **Random Word API**: `https://random-word-api.herokuapp.com/word` - For fetching random words
+- **Dictionary API**: `https://api.dictionaryapi.dev/api/v2/entries/en/` - For fetching word definitions
 
-   ```bash
-    npx expo start
-   ```
+> **Note**: The API requests may take a few moments to complete. Please be patient while the app fetches new words and their definitions.
 
-In the output, you'll find options to open the app in a
+## Setup Instructions
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Prerequisites
+- Node.js installed on your machine
+- Expo CLI: `npm install -g expo-cli`
+- For iOS: MacOS with Xcode installed
+- For Android: Android Studio with an emulator set up
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Installation
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+1. Clone the repository
+```
+git clone https://github.com/yourusername/word-of-the-day-app.git
+cd word-of-the-day-app
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies
+```
+npm install
+```
 
-## Learn more
+### Running the App
 
-To learn more about developing your project with Expo, look at the following resources:
+#### Using Expo Go on a physical device:
+1. Start the development server:
+```
+npx expo start
+```
+2. Scan the QR code with:
+   - iOS: Camera app
+   - Android: Expo Go app
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+#### On iOS Simulator:
+1. Start the development server:
+```
+npx expo start
+```
+2. Press `i` in the terminal or click "Run on iOS simulator" in the Expo developer tools
 
-## Join the community
+#### On Android Emulator:
+1. Make sure your Android emulator is running
+2. Start the development server:
+```
+npx expo start
+```
+3. Press `a` in the terminal or click "Run on Android device/emulator" in the Expo developer tools
 
-Join our community of developers creating universal apps.
+## Usage
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Home Screen
+- View the random Word of the Day and its definition
+- Press "New Word" to get a different random word
+- Each viewed word is automatically saved to history
+
+### History Screen
+- Browse through all previously viewed words
+- Words are displayed in chronological order with their definitions
